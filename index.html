@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>VM Seguridad | STOM + COL + IA</title>
+  <meta name="description" content="VM Seguridad - STOM + COL + IA para infraestructura crítica." />
+  <style>
+
+    :root{
+      --bg:#0b1220;
+      --panel:rgba(255,255,255,.08);
+      --panel2:rgba(255,255,255,.12);
+      --border:rgba(255,255,255,.16);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.72);
+      --accent:#ffd65a;      /* energía (sutil) */
+      --accent2:#59a7ff;     /* tech (sutil) */
+      --danger:#ff5b6b;      /* alertas (sutil) */
+      --shadow:0 18px 60px rgba(0,0,0,.45);
+      --radius:22px;
+      --maxw:1280px; /* un poco más amplio para que nada se apriete */
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--text);
+      background:linear-gradient(180deg, #070b13 0%, #0b1220 100%);
+      overflow-x:hidden;
+    }
+
+    /* ====== Presentación / “slides” ====== */
+    .deck{
+      scroll-snap-type:y mandatory;
+      overflow-y:auto;
+      height:100vh;
+    }
+    .slide{
+      position:relative;
+      min-height:100vh;
+      scroll-snap-align:start;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px 18px;
+    }
+
+    /* Fondo (assets/) */
+    .bg{
+      position:absolute; inset:0;
+      background-size:cover;
+      background-position:center;
+      filter:saturate(1.05) contrast(1.05);
+      transform:scale(1.02);
+    }
+    .bg::after{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        radial-gradient(1200px 600px at 30% 20%, rgba(89,167,255,.18), transparent 60%),
+        radial-gradient(900px 500px at 80% 10%, rgba(255,214,90,.18), transparent 55%),
+        linear-gradient(180deg, rgba(5,8,15,.62) 0%, rgba(5,8,15,.78) 70%, rgba(5,8,15,.88) 100%);
+    }
+
+    .frame{
+      width:min(var(--maxw), 96vw);
+      aspect-ratio:16/9;
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      border:1px solid rgba(255,255,255,.14);
+      background:linear-gradient(180deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.04) 100%);
+      position:relative;
+      overflow:hidden;
+    }
+
+    /* Header */
+    .topbar{
+      position:absolute;
+      top:18px; left:18px; right:18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      z-index:3;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(10px);
+      max-width:62%;
+      min-width:340px;
+    }
+    .brand img{
+      height:44px; width:44px; object-fit:contain;
+      border-radius:12px;
+      background:rgba(255,255,255,.06);
+      padding:6px;
+      flex:0 0 auto;
+    }
+    .brand .t1{
+      font-weight:900;
+      letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .brand .t2{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .nav{
+      display:flex; gap:10px;
+      flex:0 0 auto;
+    }
+    .btn{
+      cursor:pointer;
+      user-select:none;
+      border-radius:14px;
+      padding:10px 12px;
+      font-weight:700;
+      color:var(--text);
+      background:rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(10px);
+      transition:transform .15s ease, background .15s ease;
+      font-size:13px;
+      white-space:nowrap;
+    }
+    .btn:hover{ transform:translateY(-1px); background:rgba(0,0,0,.38); }
+    .btn .dot{
+      display:inline-block; width:8px; height:8px; border-radius:50%;
+      background:var(--accent);
+      margin-right:8px;
+      box-shadow:0 0 16px rgba(255,214,90,.55);
+      vertical-align:middle;
+    }
+
+    /* Contenido */
+    .content{
+      position:absolute;
+      inset:76px 18px 18px 18px;
+      z-index:2;
+      display:grid;
+      gap:14px;
+      min-height:0;
+    }
+
+    /* Slide 1 layout */
+    .grid1{
+      grid-template-columns: 1.45fr 1fr;
+      grid-template-rows:auto 1fr auto;
+      align-content:stretch;
+      min-height:0;
+    }
+    .hero{
+      grid-column:1 / 2;
+      padding:18px 18px 12px 18px;
+      border-radius:18px;
+      background:rgba(0,0,0,.30);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(12px);
+      min-height:0;
+    }
+    .title{
+      font-size:clamp(26px, 2.1vw + 14px, 36px);
+      font-weight:900;
+      letter-spacing:-.6px;
+      line-height:1.05;
+      margin:0;
+      word-break:keep-all;
+    }
+    .subtitle{
+      margin:10px 0 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.45;
+      max-width:70ch;
+    }
+    .tagrow{
+      margin-top:12px;
+      display:flex; flex-wrap:wrap; gap:8px;
+    }
+    .tag{
+      font-size:12px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.06);
+      color:rgba(255,255,255,.86);
+      display:flex; align-items:center; gap:8px;
+      max-width:100%;
+    }
+    .pill{
+      width:8px; height:8px; border-radius:50%;
+      background:var(--accent2);
+      box-shadow:0 0 18px rgba(89,167,255,.55);
+      flex:0 0 auto;
+    }
+    .pill.y{ background:var(--accent); box-shadow:0 0 18px rgba(255,214,90,.55); }
+    .pill.r{ background:var(--danger); box-shadow:0 0 18px rgba(255,91,107,.45); }
+
+    .kpis{
+      grid-column:1 / 2;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+      min-height:0;
+    }
+    .card{
+      border-radius:18px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14);
+      padding:14px 14px;
+      backdrop-filter: blur(10px);
+      min-height:92px;
+      min-width:0;
+    }
+    .card .h{
+      display:flex; justify-content:space-between; align-items:center;
+      font-size:12px;
+      color:var(--muted);
+      letter-spacing:.2px;
+      gap:10px;
+    }
+    .badge{
+      font-size:11px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(0,0,0,.18);
+      white-space:nowrap;
+    }
+    .card .v{
+      margin-top:10px;
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:-.3px;
+    }
+    .card .s{
+      margin-top:4px;
+      color:rgba(255,255,255,.75);
+      font-size:12px;
+      line-height:1.35;
+    }
+
+    /* Flujo */
+    .flow{
+      grid-column:2 / 3;
+      grid-row:1 / 3;
+      padding:16px;
+      border-radius:18px;
+      background:rgba(0,0,0,.30);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(12px);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      min-width:0;
+      min-height:0;
+      overflow:hidden; /* ✅ evita que el quote se “monte” visualmente */
+    }
+    .flow h3{
+      margin:0;
+      font-size:14px;
+      letter-spacing:.2px;
+      color:rgba(255,255,255,.86);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .steps{
+      display:grid;
+      gap:10px;
+      margin-top:2px;
+      min-height:0;
+      flex:1 1 auto;       /* ✅ ocupa el alto disponible */
+      overflow:auto;       /* ✅ si falta espacio, hace scroll interno */
+      padding-right:6px;   /* espacio para scrollbar */
+    }
+    .step{
+      display:grid;
+      grid-template-columns: 44px 1fr;
+      gap:10px;
+      align-items:center;
+      padding:12px;
+      border-radius:16px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      min-width:0;
+    }
+    .icon{
+      width:44px;height:44px;border-radius:14px;
+      display:grid;place-items:center;
+      background:linear-gradient(180deg, rgba(89,167,255,.18), rgba(255,214,90,.10));
+      border:1px solid rgba(255,255,255,.14);
+    }
+    .step .t{
+      font-weight:900;
+      letter-spacing:-.2px;
+      line-height:1.15;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .step .d{
+      margin-top:3px;
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.35;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .arrow{
+      height:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:rgba(255,255,255,.55);
+      font-weight:900;
+      letter-spacing:1px;
+      user-select:none;
+    }
+
+    /* Impacto */
+    .impact{
+      grid-column:1 / 3;
+      display:grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap:12px;
+      align-items:stretch;
+      min-height:0;
+    }
+    .impact .left, .impact .right{
+      border-radius:18px;
+      background:rgba(0,0,0,.30);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(12px);
+      padding:14px 16px;
+      min-width:0;
+    }
+    .impact .left h4, .impact .right h4{
+      margin:0;
+      font-size:13px;
+      color:rgba(255,255,255,.86);
+      letter-spacing:.2px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .bullets{
+      margin:10px 0 0 0;
+      padding:0;
+      list-style:none;
+      display:grid;
+      gap:8px;
+      font-size:12.5px;
+      color:rgba(255,255,255,.82);
+      min-width:0;
+    }
+    .bullets li{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      line-height:1.35;
+      min-width:0;
+    }
+    .check{
+      width:18px;height:18px;border-radius:6px;
+      background:rgba(255,214,90,.16);
+      border:1px solid rgba(255,214,90,.28);
+      display:grid;place-items:center;
+      flex:0 0 auto;
+      margin-top:1px;
+      color:rgba(255,214,90,.95);
+      font-weight:900;
+    }
+    .quote{
+      margin-top:10px;
+      padding:9px 12px;
+      border-radius:14px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:rgba(255,255,255,.86);
+      font-weight:800;
+      letter-spacing:-.2px;
+      flex:0 0 auto;       /* ✅ siempre queda abajo */
+    }
+
+    /* Slide 2 layout */
+    .grid2{
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows:auto 1fr;
+      align-content:stretch;
+      min-height:0;
+    }
+    .videoCard{
+      border-radius:18px;
+      background:rgba(0,0,0,.30);
+      border:1px solid rgba(255,255,255,.14);
+      backdrop-filter: blur(12px);
+      padding:14px;
+      overflow:hidden;
+      min-width:0;
+      min-height:0;
+    }
+    video{
+      width:100%;
+      height:100%;
+      border-radius:16px;
+      display:block;
+      background:#050812;
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .caption{
+      margin-top:10px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.4;
+    }
+
+    /* Utilidades */
+    .muted{color:var(--muted)}
+    .small{font-size:12px}
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .frame{aspect-ratio:auto; height:auto; min-height:82vh}
+      .content{position:relative; inset:auto; padding:86px 18px 18px 18px}
+      .grid1, .grid2{grid-template-columns:1fr; grid-template-rows:auto}
+      .flow{grid-column:auto; grid-row:auto}
+      .impact{grid-template-columns:1fr}
+      .kpis{grid-template-columns:1fr}
+      .title{font-size:28px}
+      .topbar{position:sticky; top:12px}
+      .brand{max-width:100%; min-width:unset}
+    }
+  
+  </style>
+</head>
+
+<body>
+  <div class="deck" id="deck">
+
+    <!-- ===================== SLIDE 1 ===================== -->
+    <section class="slide" id="slide1">
+      <div class="bg" style="background-image:url('assets/bg-substation.jpg');"></div>
+
+      <div class="frame">
+        <div class="topbar">
+          <div class="brand">
+            <img src="assets/logo-vm.png" alt="VM Seguridad logo" />
+            <div>
+              <div class="t1">VM Seguridad</div>
+              <div class="t2">STOM · COL · IA | Infraestructura crítica</div>
+            </div>
+          </div>
+
+          <div class="nav">
+            <div class="btn" onclick="go('slide1')"><span class="dot"></span>Slide 1</div>
+            <div class="btn" onclick="go('slide2')"><span class="dot"></span>Slide 2</div>
+          </div>
+        </div>
+
+        <div class="content grid1">
+          <div class="hero">
+            <h1 class="title">STOM – Dirección Operacional<br/>en Tiempo Real</h1>
+            <p class="subtitle">
+              No es “una app”. Es un <b>modelo propio</b> que integra terreno, centro de control y análisis inteligente
+              para convertir la seguridad en <b>control, trazabilidad y toma de decisiones</b>.
+            </p>
+
+            <div class="tagrow">
+              <div class="tag"><span class="pill y"></span>Control biométrico (FaceID)</div>
+              <div class="tag"><span class="pill"></span>Rondas georreferenciadas</div>
+              <div class="tag"><span class="pill r"></span>Alertas y escalamiento</div>
+              <div class="tag"><span class="pill"></span>COL – Centro de Operaciones</div>
+              <div class="tag"><span class="pill y"></span>IA STOM – Análisis & predicción</div>
+            </div>
+          </div>
+
+          <div class="flow">
+            <h3>Flujo operacional (lo que hacemos en la realidad)</h3>
+
+            <div class="steps">
+              <div class="step">
+                <div class="icon" title="Terreno">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" stroke="white" opacity=".9" stroke-width="1.8"/>
+                    <path d="M4 21a8 8 0 0 1 16 0" stroke="white" opacity=".9" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="t">Terreno (Guardias)</div>
+                  <div class="d">FaceID · rondas · eventos · patentes · evidencia</div>
+                </div>
+              </div>
+
+              <div class="arrow">↓</div>
+
+              <div class="step">
+                <div class="icon" title="STOM">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 6h16M4 12h16M4 18h10" stroke="white" opacity=".9" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="t">STOM (Consolidación)</div>
+                  <div class="d">Ordena, valida y centraliza todo lo operativo</div>
+                </div>
+              </div>
+
+              <div class="arrow">↓</div>
+
+              <div class="step">
+                <div class="icon" title="COL">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 7h18v10H3z" stroke="white" opacity=".9" stroke-width="1.8"/>
+                    <path d="M7 17v3M17 17v3" stroke="white" opacity=".9" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="t">COL (Dirección Operativa)</div>
+                  <div class="d">Monitoreo · alertas · escalamiento · asignación de supervisión</div>
+                </div>
+              </div>
+
+              <div class="arrow">↓</div>
+
+              <div class="step">
+                <div class="icon" title="Supervisor">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 21s7-4.5 7-11a7 7 0 0 0-14 0c0 6.5 7 11 7 11Z" stroke="white" opacity=".9" stroke-width="1.8"/>
+                    <path d="M12 10.5a2 2 0 1 0-2-2 2 2 0 0 0 2 2Z" stroke="white" opacity=".9" stroke-width="1.8"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="t">Supervisores (Ejecución)</div>
+                  <div class="d">Intervención en terreno · cierre con evidencia · SLA</div>
+                </div>
+              </div>
+
+              <div class="arrow">↓</div>
+
+              <div class="step">
+                <div class="icon" title="IA">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 9h6v6H9z" stroke="white" opacity=".9" stroke-width="1.8"/>
+                    <path d="M4 12h3M17 12h3M12 4v3M12 17v3" stroke="white" opacity=".9" stroke-width="1.8" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="t">IA STOM (Anticipación)</div>
+                  <div class="d">Patrones · tendencias · anomalías · riesgo · optimización</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="quote">“La seguridad tradicional observa. <b>VM Seguridad dirige.</b>”</div>
+          </div>
+
+          <div class="kpis">
+            <div class="card">
+              <div class="h">Trazabilidad <span class="badge">Auditable</span></div>
+              <div class="v">100%</div>
+              <div class="s">Registro por tiempo, ubicación y responsable.</div>
+            </div>
+            <div class="card">
+              <div class="h">Supervisión <span class="badge">Activa</span></div>
+              <div class="v">Tiempo real</div>
+              <div class="s">Alertas por ausencia, ronda incompleta y desvíos.</div>
+            </div>
+            <div class="card">
+              <div class="h">Análisis IA <span class="badge">Estratégico</span></div>
+              <div class="v">Predictivo</div>
+              <div class="s">Riesgo por horario, puntos críticos, anomalías.</div>
+            </div>
+          </div>
+
+          <div class="impact">
+            <div class="left">
+              <h4>Impacto para infraestructura crítica</h4>
+              <ul class="bullets">
+                <li><span class="check">✓</span>Control operacional con evidencia (no “reportes declarados”).</li>
+                <li><span class="check">✓</span>Dirección desde COL: detección, escalamiento y coordinación.</li>
+                <li><span class="check">✓</span>KPIs ejecutivos automáticos para control contractual y auditoría.</li>
+                <li><span class="check">✓</span>Mejora continua: decisiones basadas en datos (IA).</li>
+              </ul>
+            </div>
+
+            <div class="right">
+              <h4>Decisión (lo que el cliente obtiene)</h4>
+              <ul class="bullets">
+                <li><span class="check">✓</span><b>Visibilidad</b> completa del servicio.</li>
+                <li><span class="check">✓</span><b>Respuesta</b> más rápida ante desvíos o incidentes.</li>
+                <li><span class="check">✓</span><b>Reducción</b> de riesgo operacional.</li>
+                <li><span class="check">✓</span><b>Optimización</b> de rondas y dotación.</li>
+              </ul>
+              <div class="caption small muted" style="margin-top:10px">
+                * STOM es desarrollo propio de VM Seguridad, adaptable al entorno y protocolos del cliente.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SLIDE 2 ===================== -->
+    <section class="slide" id="slide2">
+      <div class="bg" style="background-image:url('assets/bg-controlroom.jpg');"></div>
+
+      <div class="frame">
+        <div class="topbar">
+          <div class="brand">
+            <img src="assets/logo-vm.png" alt="VM Seguridad logo" />
+            <div>
+              <div class="t1">VM Seguridad</div>
+              <div class="t2">Demo video + vista ejecutiva (COL + IA)</div>
+            </div>
+          </div>
+
+          <div class="nav">
+            <div class="btn" onclick="go('slide1')"><span class="dot"></span>Slide 1</div>
+            <div class="btn" onclick="go('slide2')"><span class="dot"></span>Slide 2</div>
+          </div>
+        </div>
+
+        <div class="content grid2">
+          <div class="videoCard">
+            <h3 style="margin:0 0 10px 0; font-size:14px; letter-spacing:.2px;">Video (Sora) – Inserta tu MP4</h3>
+            <video src="assets/stom-enel.mp4" controls playsinline preload="metadata"></video>
+            <div class="caption">
+              Consejo: exporta 42–45s, con fade final 3s antes. Mantén tono corporativo, sin efectos “startup”.
+            </div>
+          </div>
+
+          <div class="videoCard">
+            <h3 style="margin:0 0 10px 0; font-size:14px; letter-spacing:.2px;">Lo que demostramos (en 45s)</h3>
+            <ul class="bullets" style="margin-top:0">
+              <li><span class="check">✓</span><b>STOM</b> captura y valida operación (asistencia, rondas, eventos, accesos).</li>
+              <li><span class="check">✓</span><b>COL</b> dirige en tiempo real (alertas, escalamiento, supervisión).</li>
+              <li><span class="check">✓</span><b>Supervisores</b> ejecutan intervenciones y cierran con evidencia.</li>
+              <li><span class="check">✓</span><b>IA STOM</b> analiza datos y anticipa riesgo (patrones y anomalías).</li>
+            </ul>
+
+            <div class="quote" style="margin-top:12px">
+              “Controlar · Detectar · Dirigir · Validar · Anticipar”
+            </div>
+
+            <div class="card" style="margin-top:12px">
+              <div class="h">Vista ejecutiva <span class="badge">KPIs</span></div>
+              <div class="s" style="margin-top:10px">
+                Cumplimiento de asistencia · Cumplimiento de rondas · Tiempos de respuesta · Eventos por zona/horario ·
+                Puntos críticos · Alertas y cierres · Tendencias de riesgo (IA).
+              </div>
+            </div>
+
+            <div class="caption small muted" style="margin-top:10px">
+              Lista para GitHub Pages. Solo sube el MP4 a <b>assets/stom-enel.mp4</b>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    function go(id){
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  </script>
+</body>
+</html>
